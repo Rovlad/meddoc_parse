@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестирование OCR медицинских документов</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .upload-section {
+            text-align: center;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
+            margin: 20px 0;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            left: -9999px;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 15px 40px;
+            background: #667eea;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s;
+        }
+
+        .file-input-label:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .file-name {
+            margin-top: 10px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .analyze-btn {
+            padding: 15px 50px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+
+        .analyze-btn:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .analyze-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .results {
+            display: none;
+        }
+
+        .results.active {
+            display: block;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .doc-type {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+
+        .confidence {
+            font-size: 1.2em;
+            color: #48bb78;
+            font-weight: 600;
+        }
+
+        .data-section {
+            margin-top: 20px;
+        }
+
+        .data-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .data-label {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 5px;
+        }
+
+        .data-value {
+            color: #4a5568;
+            white-space: pre-wrap;
+        }
+
+        .medications, .test-results {
+            margin-top: 10px;
+        }
+
+        .medication-item, .test-item {
+            background: white;
+            padding: 12px;
+            margin: 8px 0;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .error {
+            display: none;
+            padding: 15px;
+            background: #fed7d7;
+            color: #c53030;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .error.active {
+            display: block;
+        }
+
+        .preview-section {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 400px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-top: 10px;
+        }
+
+        .processing-time {
+            text-align: right;
+            color: #718096;
+            font-size: 0.9em;
+            margin-top: 10px;
+        }
+
+        .json-toggle {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .json-toggle button {
+            padding: 10px 20px;
+            background: #4a5568;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+
+        .json-data {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #1a202c;
+            color: #48bb78;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .json-data.active {
+            display: block;
+        }
+
+        .extracted-data {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            background: #2d3748;
+            color: #90cdf4;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        .extracted-data.active {
+            display: block;
+        }
+
+        .data-label-header {
+            color: #fbd38d;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏥 Тестирование OCR</h1>
+            <p>Загрузите медицинский документ для анализа</p>
+        </div>
+
+        <div class="card">
+            <div class="upload-section">
+                <h2>Выберите документ</h2>
+                <div class="file-input-wrapper">
+                    <input type="file" id="fileInput" accept="image/*,.pdf">
+                    <label for="fileInput" class="file-input-label">
+                        📁 Выбрать файл
+                    </label>
+                </div>
+                <div class="file-name" id="fileName">Файл не выбран</div>
+                
+                <div class="preview-section" id="previewSection" style="display: none;">
+                    <img id="previewImage" class="preview-image" alt="Предварительный просмотр">
+                </div>
+
+                <button class="analyze-btn" id="analyzeBtn" disabled>
+                    🔍 Анализировать
+                </button>
+            </div>
+
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Анализируем документ...</p>
+            </div>
+
+            <div class="error" id="error"></div>
+
+            <div class="results" id="results">
+                <div class="result-header">
+                    <div>
+                        <h2>Результаты анализа</h2>
+                        <span class="doc-type" id="docType"></span>
+                    </div>
+                    <div class="confidence" id="confidence"></div>
+                </div>
+
+                <div class="data-section" id="dataSection"></div>
+
+                <div class="processing-time" id="processingTime"></div>
+
+                <div class="json-toggle">
+                    <button onclick="toggleExtracted()">Показать извлеченные данные</button>
+                    <button onclick="toggleJson()">Показать полный JSON</button>
+                </div>
+                <pre class="extracted-data" id="extractedData"></pre>
+                <pre class="json-data" id="jsonData"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const error = document.getElementById('error');
+        const previewSection = document.getElementById('previewSection');
+        const previewImage = document.getElementById('previewImage');
+
+        let selectedFile = null;
+
+        fileInput.addEventListener('change', function(e) {
+            selectedFile = e.target.files[0];
+            if (selectedFile) {
+                fileName.textContent = selectedFile.name;
+                analyzeBtn.disabled = false;
+
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImage.src = e.target.result;
+                    previewSection.style.display = 'block';
+                };
+                reader.readAsDataURL(selectedFile);
+            }
+        });
+
+        analyzeBtn.addEventListener('click', async function() {
+            if (!selectedFile) return;
+
+            // Reset states
+            error.classList.remove('active');
+            results.classList.remove('active');
+            loading.classList.add('active');
+            analyzeBtn.disabled = true;
+
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+
+            try {
+                const response = await fetch('/api/v1/analyze', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                loading.classList.remove('active');
+                analyzeBtn.disabled = false;
+
+                if (data.success) {
+                    displayResults(data);
+                } else {
+                    showError(data.error || 'Ошибка при анализе документа');
+                }
+            } catch (err) {
+                loading.classList.remove('active');
+                analyzeBtn.disabled = false;
+                showError('Ошибка соединения с сервером: ' + err.message);
+            }
+        });
+
+        function displayResults(data) {
+            results.classList.add('active');
+
+            // Document type and confidence
+            const docTypeNames = {
+                'prescription': 'Рецепт',
+                'lab_report': 'Лабораторный анализ',
+                'doctor_visit': 'Заключение врача',
+                'diagnostic_results': 'Результаты диагностики',
+                'unknown': 'Неизвестный тип'
+            };
+            document.getElementById('docType').textContent = docTypeNames[data.document_type] || data.document_type;
+            document.getElementById('confidence').textContent = `Точность: ${(data.confidence * 100).toFixed(1)}%`;
+            document.getElementById('processingTime').textContent = `Время обработки: ${data.processing_time_ms}мс`;
+
+            // Data section
+            const dataSection = document.getElementById('dataSection');
+            dataSection.innerHTML = '';
+
+            if (data.data) {
+                renderData(data.data, dataSection);
+            }
+
+            // Extracted data (just the data field)
+            if (data.data) {
+                document.getElementById('extractedData').textContent = JSON.stringify(data.data, null, 2);
+            } else {
+                document.getElementById('extractedData').textContent = 'No data extracted (data is null)';
+            }
+            
+            // Full JSON response
+            document.getElementById('jsonData').textContent = JSON.stringify(data, null, 2);
+        }
+
+        function renderData(data, container) {
+            for (const [key, value] of Object.entries(data)) {
+                if (value === null || value === undefined) continue;
+
+                const item = document.createElement('div');
+                item.className = 'data-item';
+
+                const label = document.createElement('div');
+                label.className = 'data-label';
+                label.textContent = formatLabel(key);
+
+                const valueDiv = document.createElement('div');
+                valueDiv.className = 'data-value';
+
+                if (Array.isArray(value)) {
+                    if (value.length > 0 && typeof value[0] === 'object') {
+                        // Array of objects (medications, test results, etc.)
+                        const listContainer = document.createElement('div');
+                        listContainer.className = key.includes('medication') ? 'medications' : 'test-results';
+                        
+                        value.forEach((item, index) => {
+                            const itemDiv = document.createElement('div');
+                            itemDiv.className = key.includes('medication') ? 'medication-item' : 'test-item';
+                            
+                            let itemHtml = `<strong>${index + 1}.</strong><br>`;
+                            for (const [k, v] of Object.entries(item)) {
+                                if (v !== null && v !== undefined) {
+                                    itemHtml += `<strong>${formatLabel(k)}:</strong> ${v}<br>`;
+                                }
+                            }
+                            itemDiv.innerHTML = itemHtml;
+                            listContainer.appendChild(itemDiv);
+                        });
+                        valueDiv.appendChild(listContainer);
+                    } else {
+                        // Simple array
+                        valueDiv.textContent = value.join(', ');
+                    }
+                } else if (typeof value === 'object') {
+                    // Nested object (lab_info, facility_info, etc.)
+                    let objHtml = '';
+                    for (const [k, v] of Object.entries(value)) {
+                        if (v !== null && v !== undefined) {
+                            objHtml += `<strong>${formatLabel(k)}:</strong> ${v}<br>`;
+                        }
+                    }
+                    valueDiv.innerHTML = objHtml;
+                } else {
+                    valueDiv.textContent = value;
+                }
+
+                item.appendChild(label);
+                item.appendChild(valueDiv);
+                container.appendChild(item);
+            }
+        }
+
+        function formatLabel(key) {
+            const labels = {
+                'patient_name': 'Имя пациента',
+                'patient_age': 'Возраст пациента',
+                'patient_contact': 'Контакт пациента',
+                'patient_id': 'ID пациента',
+                'doctor_name': 'Имя врача',
+                'doctor_specialty': 'Специальность врача',
+                'doctor_contact': 'Контакт врача',
+                'prescription_date': 'Дата рецепта',
+                'validity_date': 'Срок действия',
+                'medications': 'Лекарства',
+                'diagnosis': 'Диагноз',
+                'notes': 'Заметки',
+                'report_date': 'Дата отчета',
+                'collection_date': 'Дата сбора',
+                'lab_info': 'Информация о лаборатории',
+                'lab_name': 'Название лаборатории',
+                'lab_location': 'Адрес лаборатории',
+                'lab_contact': 'Контакт лаборатории',
+                'test_results': 'Результаты тестов',
+                'test_name': 'Название теста',
+                'result_value': 'Результат',
+                'unit': 'Единица',
+                'reference_range': 'Норма',
+                'status': 'Статус',
+                'visit_date': 'Дата визита',
+                'procedures': 'Процедуры',
+                'recommendations': 'Рекомендации',
+                'follow_up': 'Дальнейшее наблюдение',
+                'diagnostic_type': 'Тип диагностики',
+                'study_date': 'Дата исследования',
+                'facility_info': 'Информация о центре',
+                'facility_name': 'Название центра',
+                'facility_location': 'Адрес центра',
+                'facility_contact': 'Контакт центра',
+                'referring_physician': 'Направивший врач',
+                'radiologist_name': 'Радиолог',
+                'body_part_examined': 'Исследуемая область',
+                'findings_summary': 'Результаты',
+                'impression': 'Заключение',
+                'name': 'Название',
+                'dosage': 'Дозировка',
+                'frequency': 'Частота',
+                'duration': 'Длительность',
+                'instructions': 'Инструкции'
+            };
+            return labels[key] || key;
+        }
+
+        function showError(message) {
+            error.textContent = message;
+            error.classList.add('active');
+        }
+
+        function toggleExtracted() {
+            const extractedData = document.getElementById('extractedData');
+            extractedData.classList.toggle('active');
+        }
+
+        function toggleJson() {
+            const jsonData = document.getElementById('jsonData');
+            jsonData.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>
+
