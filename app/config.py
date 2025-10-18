@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     """Application settings"""
     
     # OpenAI Configuration
-    openai_api_key: str
+    openai_api_key: str = ""  # Temporarily made optional for Railway debugging
     openai_model: str = "gpt-4o"
     
     # Server Configuration

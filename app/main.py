@@ -248,6 +248,23 @@ async def test_page():
         )
 
 
+@app.get("/debug/env", tags=["Debug"])
+async def debug_env():
+    """Debug endpoint to check environment variables"""
+    import os
+    return {
+        "openai_api_key_set": bool(settings.openai_api_key),
+        "openai_api_key_length": len(settings.openai_api_key) if settings.openai_api_key else 0,
+        "openai_api_key_starts_with": settings.openai_api_key[:7] if settings.openai_api_key else "EMPTY",
+        "env_vars_available": {
+            "OPENAI_API_KEY": "SET" if os.getenv("OPENAI_API_KEY") else "NOT SET",
+            "PORT": os.getenv("PORT", "NOT SET"),
+            "RAILWAY_ENVIRONMENT": os.getenv("RAILWAY_ENVIRONMENT", "NOT SET"),
+        },
+        "all_env_vars": [key for key in os.environ.keys() if not key.startswith("_")]
+    }
+
+
 @app.get("/", tags=["Root"])
 async def root():
     """Root endpoint with API information"""
@@ -259,7 +276,8 @@ async def root():
             "health": f"{settings.api_v1_prefix}/health",
             "supported_documents": f"{settings.api_v1_prefix}/supported-documents",
             "analyze": f"{settings.api_v1_prefix}/analyze",
-            "test": "/test"
+            "test": "/test",
+            "debug": "/debug/env"
         },
         "documentation": "/docs"
     }
