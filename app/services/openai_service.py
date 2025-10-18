@@ -14,10 +14,7 @@ class OpenAIService:
     
     def __init__(self):
         """Initialize OpenAI client"""
-        if not settings.openai_api_key:
-            logger.warning("OpenAI API key is not set! API calls will fail.")
-            logger.warning("Please set OPENAI_API_KEY environment variable in Railway.")
-        self.client = OpenAI(api_key=settings.openai_api_key) if settings.openai_api_key else None
+        self.client = OpenAI(api_key=settings.openai_api_key)
         self.model = settings.openai_model
     
     async def analyze_image_with_prompt(
@@ -39,9 +36,6 @@ class OpenAIService:
         Returns:
             Response text from OpenAI
         """
-        if not self.client:
-            raise ValueError("OpenAI API key is not configured. Please set OPENAI_API_KEY environment variable.")
-        
         try:
             messages = [
                 {

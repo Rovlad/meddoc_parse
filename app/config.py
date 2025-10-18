@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     )
     
     # OpenAI Configuration
-    openai_api_key: str = ""  # Temporarily made optional for Railway debugging
+    openai_api_key: str  # Required - set via OPENAI_API_KEY environment variable
     openai_model: str = "gpt-4o"
     
     # Server Configuration
