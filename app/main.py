@@ -164,6 +164,7 @@ async def analyze_document(file: UploadFile = File(...)):
         )
         
         if not is_valid:
+            logger.error(f"Image validation failed for {file.filename}: {error_msg}")
             raise HTTPException(
                 status_code=400,
                 detail={

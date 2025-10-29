@@ -397,10 +397,32 @@
                 loading.classList.remove('active');
                 analyzeBtn.disabled = false;
 
-                if (data.success) {
+                if (response.ok && data.success) {
                     displayResults(data);
                 } else {
-                    showError(data.error || 'Ошибка при анализе документа');
+                    // Handle different error formats
+                    let errorMsg = 'Ошибка при анализе документа';
+                    
+                    if (data.detail) {
+                        // HTTPException format
+                        if (typeof data.detail === 'object') {
+                            // Show both error and detail if available
+                            const mainError = data.detail.error || '';
+                            const detailError = data.detail.detail || '';
+                            
+                            if (mainError && detailError) {
+                                errorMsg = `${mainError}: ${detailError}`;
+                            } else {
+                                errorMsg = mainError || detailError || JSON.stringify(data.detail);
+                            }
+                        } else {
+                            errorMsg = data.detail;
+                        }
+                    } else if (data.error) {
+                        errorMsg = data.error;
+                    }
+                    
+                    showError(`Ошибка (${response.status}): ${errorMsg}`);
                 }
             } catch (err) {
                 loading.classList.remove('active');
