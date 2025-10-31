@@ -25,12 +25,16 @@ class TestResult(BaseModel):
 class LabReportSchema(BaseModel):
     """Schema for laboratory test reports"""
     
+    # Summary
+    summary: str = Field(..., description="One-sentence summary of the lab report")
+    
     # Patient Information
     patient_name: str = Field(..., description="Full name of the patient")
     patient_age: Optional[int] = Field(None, description="Age of the patient")
     patient_id: Optional[str] = Field(None, description="Patient ID or registration number")
     
     # Dates
+    visit_date: Optional[str] = Field(None, description="Date when patient visited the medical institution (YYYY-MM-DD format)")
     report_date: str = Field(..., description="Date when report was generated (YYYY-MM-DD format)")
     collection_date: Optional[str] = Field(None, description="Date when samples were collected (YYYY-MM-DD format)")
     
@@ -49,9 +53,11 @@ class LabReportSchema(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
+                "summary": "Blood test results showing normal hemoglobin and slightly elevated glucose levels",
                 "patient_name": "Jane Smith",
                 "patient_age": 35,
                 "patient_id": "P123456",
+                "visit_date": "2025-10-15",
                 "report_date": "2025-10-16",
                 "collection_date": "2025-10-15",
                 "lab_info": {

@@ -24,13 +24,16 @@ class VisitMedication(BaseModel):
 class DoctorVisitSchema(BaseModel):
     """Schema for doctor's visit summary documents"""
     
+    # Summary
+    summary: str = Field(..., description="One-sentence summary of the doctor's visit")
+    
     # Patient Information
     patient_name: str = Field(..., description="Full name of the patient")
     patient_age: Optional[int] = Field(None, description="Age of the patient")
     patient_contact: Optional[str] = Field(None, description="Patient contact number or email")
     
     # Visit Information
-    visit_date: str = Field(..., description="Date of the visit (YYYY-MM-DD format)")
+    visit_date: str = Field(..., description="Date when patient visited the medical institution (YYYY-MM-DD format)")
     
     # Clinic Information
     clinic_info: Optional[ClinicInfo] = Field(None, description="Clinic or medical facility information")
@@ -52,6 +55,7 @@ class DoctorVisitSchema(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
+                "summary": "Cardiology visit for hypertension management with medication adjustment and lifestyle recommendations",
                 "patient_name": "Robert Williams",
                 "patient_age": 52,
                 "patient_contact": "+1-555-0400",

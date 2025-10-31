@@ -15,6 +15,9 @@ class FacilityInfo(BaseModel):
 class DiagnosticResultsSchema(BaseModel):
     """Schema for diagnostic imaging results (X-ray, MRI, CT, Ultrasound)"""
     
+    # Summary
+    summary: str = Field(..., description="One-sentence summary of the diagnostic imaging results")
+    
     # Patient Information
     patient_name: str = Field(..., description="Full name of the patient")
     patient_age: Optional[int] = Field(None, description="Age of the patient")
@@ -22,6 +25,7 @@ class DiagnosticResultsSchema(BaseModel):
     
     # Study Information
     diagnostic_type: str = Field(..., description="Type of diagnostic study: ultrasound, x-ray, mri, or ct")
+    visit_date: Optional[str] = Field(None, description="Date when patient visited the medical institution (YYYY-MM-DD format)")
     study_date: str = Field(..., description="Date when study was performed (YYYY-MM-DD format)")
     
     # Facility Information
@@ -43,10 +47,12 @@ class DiagnosticResultsSchema(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
+                "summary": "Lumbar spine MRI showing mild degenerative disc disease with no acute abnormalities",
                 "patient_name": "Lisa Anderson",
                 "patient_age": 48,
                 "patient_id": "P789012",
                 "diagnostic_type": "mri",
+                "visit_date": "2025-10-18",
                 "study_date": "2025-10-18",
                 "facility_info": {
                     "facility_name": "Advanced Imaging Center",

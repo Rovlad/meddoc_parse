@@ -17,6 +17,9 @@ class Medication(BaseModel):
 class PrescriptionSchema(BaseModel):
     """Schema for prescription documents"""
     
+    # Summary
+    summary: str = Field(..., description="One-sentence summary of the prescription")
+    
     # Patient Information
     patient_name: str = Field(..., description="Full name of the patient")
     patient_age: Optional[int] = Field(None, description="Age of the patient")
@@ -28,6 +31,7 @@ class PrescriptionSchema(BaseModel):
     doctor_contact: Optional[str] = Field(None, description="Doctor's contact details")
     
     # Dates
+    visit_date: Optional[str] = Field(None, description="Date when patient visited the medical institution (YYYY-MM-DD format)")
     prescription_date: str = Field(..., description="Date when prescription was issued (YYYY-MM-DD format)")
     validity_date: Optional[str] = Field(None, description="Prescription expiry/validity date (YYYY-MM-DD format)")
     
@@ -41,12 +45,14 @@ class PrescriptionSchema(BaseModel):
     class Config:
         json_schema_extra = {
             "example": {
+                "summary": "Prescription for Amoxicillin to treat bacterial infection for 7 days",
                 "patient_name": "John Doe",
                 "patient_age": 45,
                 "patient_contact": "+1-555-0100",
                 "doctor_name": "Dr. Sarah Smith",
                 "doctor_specialty": "General Physician",
                 "doctor_contact": "+1-555-0200",
+                "visit_date": "2025-10-15",
                 "prescription_date": "2025-10-15",
                 "validity_date": "2026-01-15",
                 "medications": [
